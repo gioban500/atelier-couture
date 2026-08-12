@@ -1,0 +1,54 @@
+-- config/db.sql
+
+CREATE TABLE IF NOT EXISTS users (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  email TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  role TEXT DEFAULT 'admin',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_login_at DATETIME,
+  reset_token TEXT,
+  reset_expires_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS portfolio (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  title TEXT NOT NULL,
+  image_url TEXT NOT NULL,
+  category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL,
+  position INTEGER DEFAULT 0,
+  archived_at DATETIME DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS devis (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  client_name TEXT NOT NULL,
+  client_phone TEXT NOT NULL,
+  client_email TEXT NOT NULL,
+  service_type TEXT NOT NULL,
+  description TEXT NOT NULL,
+  reference_img_url TEXT,
+  status TEXT DEFAULT 'Nouveau',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_by INTEGER REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS devis_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  devis_id INTEGER NOT NULL REFERENCES devis(id) ON DELETE CASCADE,
+  old_status TEXT NOT NULL,
+  new_status TEXT NOT NULL,
+  changed_by INTEGER REFERENCES users(id),
+  changed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
