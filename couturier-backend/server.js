@@ -16,8 +16,11 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware CORS
 app.use(cors({
-  origin: ['http://atelier.miabetepe.com', 'https://atelier.miabetepe.com'],
-  
+  origin: [
+    'https://ateliercouture.netlify.app',
+    'http://atelier.miabetepe.com',
+    'https://atelier.miabetepe.com'
+  ],
   credentials: true
 }));
 
