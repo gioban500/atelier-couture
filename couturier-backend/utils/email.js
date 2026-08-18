@@ -9,6 +9,7 @@ function getTransporter() {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: smtpPort,
     secure: smtpPort === 465, // true si port 465, false sinon
+    family: 4, // 👈 Forcer IPv4 pour contourner l'absence de route IPv6 sur Render
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
@@ -100,7 +101,6 @@ export async function sendResetPasswordEmail(toEmail, resetToken) {
   }
 
   const transporter = getTransporter();
-  // Correction ici : Adapter la route exacte frontend pour le mot de passe (ex: /reset-password ou /set-password)
   const baseUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
   const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
 
