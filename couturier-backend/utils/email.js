@@ -2,19 +2,20 @@ import nodemailer from 'nodemailer';
 
 // Fonction de génération du transporteur à la volée
 function getTransporter() {
-  // Par défaut sur 465 (SSL) pour éviter le blocage du port 587 sur Render
   const smtpPort = Number(process.env.SMTP_PORT) || 465;
-  
+
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: 'smtp.gmail.com', // On force le host en dur si la variable pose problème
     port: smtpPort,
-    secure: smtpPort === 465, // true si port 465, false sinon
-    family: 4, // 👈 Forcer IPv4 pour contourner l'absence de route IPv6 sur Render
+    secure: smtpPort === 465,
+    family: 4, // Pour Nodemailer
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
-    connectionTimeout: 10000, // Évite que le serveur bloque indéfiniment si le SMTP met du temps
+    // Forcer la résolution DNS exclusivement en IPv4
+    socketTimeout: 15000,
+    connectionTimeout: 15000,
   });
 }
 
