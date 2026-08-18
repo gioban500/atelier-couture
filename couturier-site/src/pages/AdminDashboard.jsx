@@ -26,9 +26,9 @@ export default function AdminDashboard() {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
       const [photosRes, categoriesRes, devisRes] = await Promise.all([
-        fetch('http://atelierBack.miabetepe.com/api/portfolio', { headers }),
-        fetch('http://atelierBack.miabetepe.com/api/portfolio/categories', { headers }),
-        fetch('http://atelierBack.miabetepe.com/api/admin/devis', { headers })
+        fetch('https://atelier-couture-3954.onrender.com/api/portfolio', { headers }),
+        fetch('https://atelier-couture-3954.onrender.com/api/portfolio/categories', { headers }),
+        fetch('https://atelier-couture-3954.onrender.com/api/admin/devis', { headers })
       ]);
 
       if ([photosRes, categoriesRes, devisRes].some(r => r.status === 401)) {
@@ -84,8 +84,8 @@ export default function AdminDashboard() {
   const handleSubmitPhoto = async (e) => {
     e.preventDefault();
     const url = editingId 
-      ? `http://atelierBack.miabetepe.com/api/portfolio/${editingId}` 
-      : 'http://atelierBack.miabetepe.com/api/portfolio';
+      ? `https://atelier-couture-3954.onrender.com/api/portfolio/${editingId}` 
+      : 'https://atelier-couture-3954.onrender.com/api/portfolio';
 
     const res = await fetch(url, {
       method: editingId ? 'PATCH' : 'POST',
@@ -104,7 +104,7 @@ export default function AdminDashboard() {
   };
 
   const handleArchivePhoto = async (id) => {
-    await fetch(`http://atelierBack.miabetepe.com/api/portfolio/${id}/archive`, {
+    await fetch(`https://atelier-couture-3954.onrender.com/api/portfolio/${id}/archive`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
 
   const handleDeletePhoto = async (id) => {
     if (!window.confirm('Supprimer cette photo ?')) return;
-    await fetch(`http://atelierBack.miabetepe.com/api/portfolio/${id}`, {
+    await fetch(`https://atelier-couture-3954.onrender.com/api/portfolio/${id}`, {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` },
     });
@@ -122,7 +122,7 @@ export default function AdminDashboard() {
 
   const handleStatusChange = async (e, devisId, newStatus) => {
     e.stopPropagation();
-    await fetch(`http://atelierBack.miabetepe.com/api/admin/devis/${devisId}/status`, {
+    await fetch(`https://atelier-couture-3954.onrender.com/api/admin/devis/${devisId}/status`, {
       method: 'PUT',
       headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus })

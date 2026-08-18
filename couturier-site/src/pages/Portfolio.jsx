@@ -16,8 +16,8 @@ export default function Portfolio() {
     const loadPortfolio = async () => {
       try {
         const [portfolioRes, categoriesRes] = await Promise.all([
-          fetch('http://atelierBack.miabetepe.com/api/portfolio'),
-          fetch('http://atelierBack.miabetepe.com/api/portfolio/categories')
+          fetch('https://atelier-couture-3954.onrender.com/api/portfolio'),
+          fetch('https://atelier-couture-3954.onrender.com/api/portfolio/categories')
         ]);
 
         const portfolioData = await portfolioRes.json();

@@ -110,7 +110,7 @@ export default function Devis() {
     setServerError(null);
 
     try {
-      const response = await fetch('http://atelierBack.miabetepe.com/api/devis', {
+      const response = await fetch('https://atelier-couture-3954.onrender.com/api/devis', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
