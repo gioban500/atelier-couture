@@ -2,23 +2,22 @@ import nodemailer from 'nodemailer';
 
 // Fonction de génération du transporteur à la volée
 function getTransporter() {
-  const smtpPort = Number(process.env.SMTP_PORT) || 587;
+  // Par défaut sur 465 (SSL) pour éviter le blocage du port 587 sur Render
+  const smtpPort = Number(process.env.SMTP_PORT) || 465;
   
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: smtpPort,
-    secure: smtpPort === 465,
+    secure: smtpPort === 465, // true si port 465, false sinon
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
     },
+    connectionTimeout: 10000, // Évite que le serveur bloque indéfiniment si le SMTP met du temps
   });
 }
 
-
-
 export async function sendNewDevisNotificationToCouturier(devis) {
-  // On vérifie directement si les identifiants sont chargés
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.error('❌ ERREUR SMTP: SMTP_USER ou SMTP_PASS manquant dans .env');
     return;
@@ -26,7 +25,9 @@ export async function sendNewDevisNotificationToCouturier(devis) {
 
   const transporter = getTransporter();
   const adminUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/admin`;
-  const cleanPhone = devis.client_phone ? devis.client_phone.replace(/\D/g, '') : '';
+  // Sécurisation au cas où client_phone est vide ou indéfini
+  const rawPhone = devis.client_phone || '';
+  const cleanPhone = rawPhone.replace(/\D/g, '');
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
@@ -34,16 +35,16 @@ export async function sendNewDevisNotificationToCouturier(devis) {
       <p style="color: #334155; font-size: 14px;">Un client vient de soumettre une nouvelle demande de devis sur le site.</p>
       
       <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #cbd5e1; margin: 15px 0;">
-        <p style="margin: 5px 0; font-size: 14px;"><strong>Client :</strong> ${devis.client_name}</p>
-        <p style="margin: 5px 0; font-size: 14px;"><strong>Téléphone :</strong> ${devis.client_phone}</p>
-        <p style="margin: 5px 0; font-size: 14px;"><strong>Email :</strong> ${devis.client_email}</p>
-        <p style="margin: 5px 0; font-size: 14px;"><strong>Prestation :</strong> ${devis.service_type}</p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Client :</strong> ${devis.client_name || 'N/A'}</p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Téléphone :</strong> ${devis.client_phone || 'N/A'}</p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Email :</strong> ${devis.client_email || 'N/A'}</p>
+        <p style="margin: 5px 0; font-size: 14px;"><strong>Prestation :</strong> ${devis.service_type || 'N/A'}</p>
         <p style="margin: 10px 0 5px 0; font-size: 14px;"><strong>Description :</strong></p>
-        <p style="margin: 0; font-size: 13px; color: #475569; font-style: italic;">"${devis.description}"</p>
+        <p style="margin: 0; font-size: 13px; color: #475569; font-style: italic;">"${devis.description || ''}"</p>
       </div>
 
       <div style="margin-top: 20px;">
-        <a href="https://wa.me/${cleanPhone}" style="background-color: #16a34a; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold; margin-right: 10px; display: inline-block;">💬 Contacter sur WhatsApp</a>
+        ${cleanPhone ? `<a href="https://wa.me/${cleanPhone}" style="background-color: #16a34a; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold; margin-right: 10px; display: inline-block;">💬 Contacter sur WhatsApp</a>` : ''}
         <a href="${adminUrl}" style="background-color: #0f172a; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: bold; display: inline-block;">💻 Ouvrir le Back-Office</a>
       </div>
     </div>
@@ -53,7 +54,7 @@ export async function sendNewDevisNotificationToCouturier(devis) {
     await transporter.sendMail({
       from: process.env.EMAIL_FROM || process.env.SMTP_USER,
       to: process.env.COUTURIER_EMAIL || process.env.SMTP_USER,
-      subject: `🎯 Nouveau devis #${devis.id} — ${devis.client_name}`,
+      subject: `🎯 Nouveau devis #${devis.id || ''} — ${devis.client_name || 'Client'}`,
       html: htmlContent,
     });
     console.log(`✉️ Notification devis envoyée au couturier`);
@@ -99,7 +100,9 @@ export async function sendResetPasswordEmail(toEmail, resetToken) {
   }
 
   const transporter = getTransporter();
-  const resetUrl = `${process.env.CLIENT_URL || 'http://localhost:5173'}/admin/reset-password?token=${resetToken}`;
+  // Correction ici : Adapter la route exacte frontend pour le mot de passe (ex: /reset-password ou /set-password)
+  const baseUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '');
+  const resetUrl = `${baseUrl}/reset-password?token=${resetToken}`;
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px;">
