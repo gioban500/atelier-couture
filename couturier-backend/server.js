@@ -16,7 +16,8 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware CORS
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://atelier.miabetepe.com', 'https://atelier.miabetepe.com'],
+  
   credentials: true
 }));
 

@@ -16,8 +16,8 @@ export default function Portfolio() {
     const loadPortfolio = async () => {
       try {
         const [portfolioRes, categoriesRes] = await Promise.all([
-          fetch('http://localhost:5000/api/portfolio'),
-          fetch('http://localhost:5000/api/portfolio/categories')
+          fetch('http://atelierBack.miabetepe.com/api/portfolio'),
+          fetch('http://atelierBack.miabetepe.com/api/portfolio/categories')
         ]);
 
         const portfolioData = await portfolioRes.json();

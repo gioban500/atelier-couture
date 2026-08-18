@@ -139,7 +139,7 @@ export default function PortfolioGrid({ photos, categories, onEdit, onArchive, o
         position: index,
       }));
 
-      const res = await fetch('http://localhost:5000/api/portfolio/reorder', {
+      const res = await fetch('http://atelierBack.miabetepe.com/api/portfolio/reorder', {
         method: 'PATCH',
         headers: {
           'Authorization': `Bearer ${token}`,
