@@ -1,7 +1,7 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import MeasurementForm from './MeasurementForm';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://atelier-couture-3954.onrender.com';
 
 export default function MeasurementModal({ client, onClose, onRefresh }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -29,17 +29,22 @@ export default function MeasurementModal({ client, onClose, onRefresh }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={onClose}>
-      <div className="bg-white rounded-[8px] max-w-3xl w-full overflow-hidden shadow-xl" onClick={(e) => e.stopPropagation()}>
-        <div className="bg-[#0b1329] text-white p-4 flex justify-between items-center border-b border-[#D4AF37]/30">
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 overflow-y-auto" onClick={onClose}>
+      <div 
+        className="bg-white rounded-[8px] max-w-3xl w-full my-auto max-h-[90vh] flex flex-col shadow-2xl overflow-hidden" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* En-tête fixe (toujours visible) */}
+        <div className="bg-[#0b1329] text-white p-4 flex justify-between items-center border-b border-[#D4AF37]/30 flex-shrink-0">
           <div>
             <h2 className="text-lg font-bold text-[#D4AF37]">{client.client_name}</h2>
             <p className="text-xs text-slate-300">Stature : {client.height ? `${client.height} cm` : 'Non renseignée'}</p>
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl">✕</button>
+          <button onClick={onClose} className="text-slate-400 hover:text-white text-xl font-bold px-2">✕</button>
         </div>
 
-        <div className="p-6 max-h-[80vh] overflow-y-auto">
+        {/* Zone défilable pour le formulaire et les infos */}
+        <div className="p-6 overflow-y-auto flex-1">
           {isEditing ? (
             <MeasurementForm initialData={client} onSave={handleUpdate} onCancel={() => setIsEditing(false)} />
           ) : (
