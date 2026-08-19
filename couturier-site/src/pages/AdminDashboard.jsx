@@ -419,17 +419,36 @@ export default function AdminDashboard() {
       )}
 
       {/* MODALE CRÉATION NOUVEAU CLIENT */}
-      {showCreateClientModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl space-y-4">
-            <div className="flex justify-between items-center border-b pb-3">
-              <h2 className="text-lg font-bold text-slate-900">Ajouter les mesures d'un nouveau client</h2>
-              <button onClick={() => setShowCreateClientModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
-            </div>
-            <MeasurementForm onSave={handleCreateClient} onCancel={() => setShowCreateClientModal(false)} />
-          </div>
-        </div>
-      )}
+{showCreateClientModal && (
+  <div 
+    className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 overflow-y-auto" 
+    onClick={() => setShowCreateClientModal(false)}
+  >
+    <div 
+      className="bg-white rounded-xl max-w-3xl w-full my-auto max-h-[90vh] flex flex-col shadow-xl overflow-hidden" 
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* En-tête fixe avec la croix d'annulation */}
+      <div className="flex justify-between items-center border-b p-4 bg-slate-50 flex-shrink-0">
+        <h2 className="text-lg font-bold text-slate-900">Ajouter les mesures d'un nouveau client</h2>
+        <button 
+          onClick={() => setShowCreateClientModal(false)} 
+          className="text-slate-400 hover:text-slate-600 text-xl font-bold px-2"
+        >
+          ✕
+        </button>
+      </div>
+
+      {/* Corps du formulaire avec scroll vertical */}
+      <div className="p-6 overflow-y-auto flex-1">
+        <MeasurementForm 
+          onSave={handleCreateClient} 
+          onCancel={() => setShowCreateClientModal(false)} 
+        />
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
