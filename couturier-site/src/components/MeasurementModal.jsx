@@ -10,10 +10,9 @@ export default function MeasurementModal({ client, onClose, onRefresh }) {
 
   const handleUpdate = async (formData) => {
     try {
-      // Nettoyage des données pour le serveur
       const payload = { ...formData };
       
-      // Convertir les chaînes vides des nombres en null pour éviter les erreurs SQL/API
+      // Nettoyage des champs vides
       Object.keys(payload).forEach((key) => {
         if (payload[key] === '' && key !== 'notes' && key !== 'photo_url' && key !== 'client_name') {
           payload[key] = null;
@@ -23,9 +22,8 @@ export default function MeasurementModal({ client, onClose, onRefresh }) {
       const res = await fetch(`${API_BASE}/api/measurements/${client.id}`, {
         method: 'PATCH',
         headers: {
-          'Content-[#Type]': 'application/json',
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
+          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
         },
         body: JSON.stringify(payload),
       });
