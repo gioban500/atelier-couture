@@ -160,7 +160,7 @@ export default function Devis() {
       <section className="bg-gradient-to-br from-slate-100 to-slate-50 py-16 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl sm:text-6xl font-serif font-bold text-gray-900 mb-6">
-            Demander un Devis
+            Demander une Prestation
           </h1>
           <p className="text-lg text-gray-600">
             Remplissez le formulaire et nous vous répondrons dans les 24-48h

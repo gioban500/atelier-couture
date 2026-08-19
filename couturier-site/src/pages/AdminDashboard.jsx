@@ -193,7 +193,7 @@ export default function AdminDashboard() {
               onClick={() => setActiveTab('devis')}
               className={`px-3 py-1.5 rounded transition ${activeTab === 'devis' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300'}`}
             >
-              Devis ({devis.length})
+              Prestation ({devis.length})
             </button>
             <button
               onClick={() => setActiveTab('portfolio')}

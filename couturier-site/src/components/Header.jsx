@@ -36,7 +36,7 @@ export default function Header() {
           </button>
         ) : (
           <Link to="/devis" className="bg-[#D4AF37] text-slate-950 font-bold px-5 py-2.5 rounded text-xs uppercase tracking-wider hover:bg-[#b8952b] transition">
-            Devis Gratuit
+            Prestation Gratuit
           </Link>
         )}
       </nav>

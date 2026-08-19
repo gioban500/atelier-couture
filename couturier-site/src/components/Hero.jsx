@@ -26,7 +26,7 @@ export default function Hero() {
         </p>
         <Link to="/devis">
           <button className="inline-block bg-[#D4AF37] text-[#0F172A] hover:bg-[#b8952b] px-10 py-4 rounded-full font-semibold text-sm uppercase tracking-wider shadow-xl transition transform hover:scale-105">
-            Demander un Devis
+            Demander une Prestation
           </button>
         </Link>
       </div>
