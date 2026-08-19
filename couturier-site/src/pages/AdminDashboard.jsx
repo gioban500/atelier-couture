@@ -3,16 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import DevisModal from '../components/DevisModal';
 import PortfolioModal from '../components/PortfolioModal';
 import PortfolioGrid from '../components/PortfolioGrid';
+import MeasurementModal from '../components/MeasurementModal';
+import MeasurementForm from '../components/MeasurementForm';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [devis, setDevis] = useState([]);
   const [photos, setPhotos] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [clients, setClients] = useState([]);
+  
   const [selectedDevis, setSelectedDevis] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [showCreateClientModal, setShowCreateClientModal] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [devisFilter, setDevisFilter] = useState('Nouveau');
   const [searchTerm, setSearchTerm] = useState('');
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
 
   // MODALE PORTFOLIO STATE
   const [isPortfolioModalOpen, setIsPortfolioModalOpen] = useState(false);
@@ -25,13 +33,14 @@ export default function AdminDashboard() {
   const fetchAllData = useCallback(async () => {
     try {
       const headers = { 'Authorization': `Bearer ${token}` };
-      const [photosRes, categoriesRes, devisRes] = await Promise.all([
+      const [photosRes, categoriesRes, devisRes, measurementsRes] = await Promise.all([
         fetch('https://atelier-couture-3954.onrender.com/api/portfolio', { headers }),
         fetch('https://atelier-couture-3954.onrender.com/api/portfolio/categories', { headers }),
-        fetch('https://atelier-couture-3954.onrender.com/api/admin/devis', { headers })
+        fetch('https://atelier-couture-3954.onrender.com/api/admin/devis', { headers }),
+        fetch('https://atelier-couture-3954.onrender.com/api/measurements', { headers })
       ]);
 
-      if ([photosRes, categoriesRes, devisRes].some(r => r.status === 401)) {
+      if ([photosRes, categoriesRes, devisRes, measurementsRes].some(r => r.status === 401)) {
         localStorage.removeItem('adminToken');
         navigate('/login');
         return;
@@ -40,6 +49,9 @@ export default function AdminDashboard() {
       setPhotos(await photosRes.json());
       setCategories(await categoriesRes.json());
       setDevis(await devisRes.json());
+      if (measurementsRes.ok) {
+        setClients(await measurementsRes.json());
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -62,14 +74,13 @@ export default function AdminDashboard() {
     return () => { isMounted = false; };
   }, [fetchAllData, navigate, token]);
 
-  // OUVRIR MODALE POUR CRÉATION
+  // PORFOLIO HANDLERS
   const handleOpenAddModal = () => {
     setFormData({ title: '', category_id: '', position: 0, image_url: '' });
     setEditingId(null);
     setIsPortfolioModalOpen(true);
   };
 
-  // OUVRIR MODALE POUR MODIFICATION
   const handleOpenEditModal = (photo) => {
     setFormData({
       title: photo.title,
@@ -120,6 +131,7 @@ export default function AdminDashboard() {
     fetchAllData();
   };
 
+  // DEVIS STATUS HANDLER
   const handleStatusChange = async (e, devisId, newStatus) => {
     e.stopPropagation();
     await fetch(`https://atelier-couture-3954.onrender.com/api/admin/devis/${devisId}/status`, {
@@ -130,12 +142,38 @@ export default function AdminDashboard() {
     fetchAllData();
   };
 
+  // CRÉATION CLIENT / MESURES
+  const handleCreateClient = async (formData) => {
+    try {
+      const res = await fetch('https://atelier-couture-3954.onrender.com/api/measurements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        setShowCreateClientModal(false);
+        fetchAllData();
+      } else {
+        alert('Erreur lors de la création du client.');
+      }
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const activePhotos = photos.filter(p => !p.archived_at);
-  
-  // Filtrage combiné : par statut actif ET par recherche sur le nom du client
+
   const filteredDevis = devis
     .filter(d => (d.status || 'Nouveau') === devisFilter)
     .filter(d => d.client_name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  const filteredClients = clients.filter(c => 
+    c.client_name.toLowerCase().includes(clientSearchTerm.toLowerCase())
+  );
 
   const statuses = ['Nouveau', 'En attente', 'Traité', 'Archivé'];
 
@@ -163,6 +201,12 @@ export default function AdminDashboard() {
             >
               Portfolio ({activePhotos.length})
             </button>
+            <button
+              onClick={() => setActiveTab('mesures')}
+              className={`px-3 py-1.5 rounded transition ${activeTab === 'mesures' ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-300'}`}
+            >
+              Mesures ({clients.length})
+            </button>
           </div>
           <button onClick={() => { localStorage.removeItem('adminToken'); navigate('/login'); }} className="text-xs text-red-400 border border-red-500/30 px-3 py-1.5 rounded hover:bg-red-500/10">
             Déconnexion
@@ -180,7 +224,6 @@ export default function AdminDashboard() {
             {activeTab === 'devis' && (
               <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div className="p-4 bg-slate-50 border-b border-slate-200">
-                  {/* BARRE DE RECHERCHE CLIENT */}
                   <input
                     type="text"
                     placeholder="Rechercher un client par son nom..."
@@ -250,7 +293,6 @@ export default function AdminDashboard() {
             {/* ================= ONGLET PORTFOLIO ================= */}
             {activeTab === 'portfolio' && (
               <div className="space-y-6">
-                
                 <div className="flex items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
                   <div>
                     <h2 className="text-lg font-bold text-slate-900">Articles du Portfolio</h2>
@@ -282,6 +324,73 @@ export default function AdminDashboard() {
                 )}
               </div>
             )}
+
+            {/* ================= ONGLET MESURES ================= */}
+            {activeTab === 'mesures' && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between bg-white p-4 rounded-xl border border-slate-200 shadow-sm gap-4">
+                  <div>
+                    <h2 className="text-lg font-bold text-slate-900">Gestion des Mesures Clients</h2>
+                    <p className="text-xs text-slate-500">Consultez et modifiez les fiches de mesures de vos clients</p>
+                  </div>
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      placeholder="Rechercher un client..."
+                      value={clientSearchTerm}
+                      onChange={(e) => setClientSearchTerm(e.target.value)}
+                      className="px-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    />
+                    <button
+                      onClick={() => setShowCreateClientModal(true)}
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs transition flex items-center gap-1.5 shadow-sm whitespace-nowrap"
+                    >
+                      <span>➕</span> Nouveau Client
+                    </button>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm text-slate-700">
+                      <thead className="bg-slate-50 text-slate-400 text-xs uppercase border-b">
+                        <tr>
+                          <th className="p-3">Nom Client</th>
+                          <th className="p-3">Stature</th>
+                          <th className="p-3">Poitrine</th>
+                          <th className="p-3">Taille</th>
+                          <th className="p-3">Bassin</th>
+                          <th className="p-3 text-center">Photo</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredClients.map((c) => (
+                          <tr
+                            key={c.id}
+                            onClick={() => setSelectedClient(c)}
+                            className="hover:bg-amber-50/40 cursor-pointer transition"
+                          >
+                            <td className="p-3 font-semibold text-slate-900">{c.client_name}</td>
+                            <td className="p-3 text-slate-600">{c.height ? `${c.height} cm` : '—'}</td>
+                            <td className="p-3 text-slate-600">{c.chest ? `${c.chest} cm` : '—'}</td>
+                            <td className="p-3 text-slate-600">{c.waist ? `${c.waist} cm` : '—'}</td>
+                            <td className="p-3 text-slate-600">{c.hips ? `${c.hips} cm` : '—'}</td>
+                            <td className="p-3 text-center">{c.photo_url ? '✅' : '❌'}</td>
+                          </tr>
+                        ))}
+                        {filteredClients.length === 0 && (
+                          <tr>
+                            <td colSpan="6" className="p-8 text-center text-slate-400 italic">
+                              Aucun client trouvé dans les mesures.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
       </main>
@@ -289,7 +398,7 @@ export default function AdminDashboard() {
       {/* MODALE POUR LES DEVIS */}
       <DevisModal selectedDevis={selectedDevis} onClose={() => setSelectedDevis(null)} />
 
-      {/* MODALE POUR AJOUTER / MODIFIER UN ARTICLE DU PORTFOLIO */}
+      {/* MODALE PORTFOLIO */}
       <PortfolioModal
         isOpen={isPortfolioModalOpen}
         onClose={() => setIsPortfolioModalOpen(false)}
@@ -299,6 +408,28 @@ export default function AdminDashboard() {
         editingId={editingId}
         categories={categories}
       />
+
+      {/* MODALE DÉTAILS / MODIFICATION MESURES */}
+      {selectedClient && (
+        <MeasurementModal 
+          client={selectedClient} 
+          onClose={() => setSelectedClient(null)} 
+          onRefresh={fetchAllData} 
+        />
+      )}
+
+      {/* MODALE CRÉATION NOUVEAU CLIENT */}
+      {showCreateClientModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-3xl w-full p-6 shadow-xl space-y-4">
+            <div className="flex justify-between items-center border-b pb-3">
+              <h2 className="text-lg font-bold text-slate-900">Ajouter les mesures d'un nouveau client</h2>
+              <button onClick={() => setShowCreateClientModal(false)} className="text-slate-400 hover:text-slate-600 text-lg">✕</button>
+            </div>
+            <MeasurementForm onSave={handleCreateClient} onCancel={() => setShowCreateClientModal(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
