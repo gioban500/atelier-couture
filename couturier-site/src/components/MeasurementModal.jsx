@@ -10,21 +10,37 @@ export default function MeasurementModal({ client, onClose, onRefresh }) {
 
   const handleUpdate = async (formData) => {
     try {
+      // Nettoyage des données pour le serveur
+      const payload = { ...formData };
+      
+      // Convertir les chaînes vides des nombres en null pour éviter les erreurs SQL/API
+      Object.keys(payload).forEach((key) => {
+        if (payload[key] === '' && key !== 'notes' && key !== 'photo_url' && key !== 'client_name') {
+          payload[key] = null;
+        }
+      });
+
       const res = await fetch(`${API_BASE}/api/measurements/${client.id}`, {
         method: 'PATCH',
         headers: {
+          'Content-[#Type]': 'application/json',
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('adminToken')}`,
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
-      if (!res.ok) throw new Error('Erreur lors de la sauvegarde');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `Erreur serveur (${res.status})`);
+      }
+
       alert('Mesures enregistrées !');
       setIsEditing(false);
       onRefresh();
     } catch (err) {
-      alert(err.message);
+      console.error(err);
+      alert(`Erreur: ${err.message}`);
     }
   };
 

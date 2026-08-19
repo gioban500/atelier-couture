@@ -28,21 +28,39 @@ export default function MeasurementForm({ initialData = {}, onSave, onCancel }) 
   };
 
   // Convertisseur d'image native -> Base64
+// Compresseur d'image via Canvas pour éviter le dépassement de taille JSON
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert("L'image est trop lourde (max 5Mo).");
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64String = reader.result;
-        setPreview(base64String);
-        setFormData((prev) => ({ ...prev, photo_url: base64String }));
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert("L'image est trop lourde (max 5Mo).");
+      return;
     }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 600; // Largeur max suffisante pour une photo de profil
+        const scaleFactor = MAX_WIDTH / img.width;
+        
+        canvas.width = img.width > MAX_WIDTH ? MAX_WIDTH : img.width;
+        canvas.height = img.width > MAX_WIDTH ? img.height * scaleFactor : img.height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        // Compression en JPEG avec 70% de qualité
+        const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+        
+        setPreview(compressedBase64);
+        setFormData((prev) => ({ ...prev, photo_url: compressedBase64 }));
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleRemovePhoto = () => {
