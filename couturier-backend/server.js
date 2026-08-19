@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.js';
 import devisRoutes from './routes/devis.js';
 import portfolioRoutes from './routes/portfolio.js';
 import adminRoutes from './routes/admin.js';
+import measurementRoutes from './routes/measurements.js'; // ⬅️ AJOUTÉ
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/devis', devisRoutes);
 app.use('/api/portfolio', portfolioRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/measurements', measurementRoutes); // ⬅️ AJOUTÉ
 
 // Route de santé (Health Check)
 app.get('/api/health', (req, res) => {
