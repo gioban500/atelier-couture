@@ -52,3 +52,33 @@ CREATE TABLE IF NOT EXISTS devis_history (
   changed_by INTEGER REFERENCES users(id),
   changed_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS client_measurements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  devis_id INTEGER REFERENCES devis(id) ON DELETE SET NULL,
+  client_name TEXT NOT NULL,
+  client_phone TEXT,
+  client_email TEXT,
+  
+  -- Stature
+  height INTEGER,          -- Stature globale (cm)
+  
+  -- Haut du corps
+  neck_circ INTEGER,       -- Tour de cou (cm)
+  shoulder_width INTEGER,  -- Carrure dos (cm)
+  chest INTEGER,           -- Tour de poitrine (cm)
+  waist INTEGER,           -- Tour de taille (cm)
+  arm_length INTEGER,      -- Longueur de manche (cm)
+  bicep_circ INTEGER,      -- Tour de biceps (cm)
+  
+  -- Bas du corps
+  hips INTEGER,            -- Tour de bassin (cm)
+  thigh_circ INTEGER,      -- Tour de cuisse (cm)
+  inside_leg INTEGER,      -- Entrejambe (cm)
+  outside_leg INTEGER,     -- Longueur jambe externe (cm)
+  
+  photo_url TEXT,          -- Image encodée en Base64
+  notes TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
