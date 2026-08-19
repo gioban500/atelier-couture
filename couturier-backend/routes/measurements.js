@@ -1,5 +1,5 @@
 import express from 'express';
-import db from '../config/db.js';
+import db from '../db.js';
 import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
