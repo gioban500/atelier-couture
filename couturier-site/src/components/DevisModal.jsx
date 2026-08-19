@@ -29,7 +29,7 @@ export default function DevisModal({ selectedDevis, onClose }) {
           {/* ENTÊTE */}
           <div className="mb-4 border-b border-slate-100 pb-3 pr-8">
             <span className="text-xs font-semibold text-amber-600 uppercase tracking-wider">
-              Devis #{selectedDevis.id}
+              Demande #{selectedDevis.id}
             </span>
             <h3 className="text-xl font-serif font-bold text-slate-900 truncate">
               {selectedDevis.client_name}
