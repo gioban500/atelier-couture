@@ -1,6 +1,6 @@
 import express from 'express';
 import db from '../db.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateJWT } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -23,7 +23,7 @@ router.get('/', authenticateToken, (req, res) => {
 });
 
 // GET /api/measurements/:id - Détail client
-router.get('/:id', authenticateToken, (req, res) => {
+router.get('/:id', authenticateJWT, (req, res) => {
   try {
     const row = db.prepare('SELECT * FROM client_measurements WHERE id = ?').get(req.params.id);
     if (!row) return res.status(404).json({ error: 'Mesures introuvables' });
@@ -34,7 +34,7 @@ router.get('/:id', authenticateToken, (req, res) => {
 });
 
 // POST /api/measurements - Création
-router.post('/', authenticateToken, (req, res) => {
+router.post('/', authenticateJWT, (req, res) => {
   const {
     devis_id, client_name, client_phone, client_email,
     height, neck_circ, shoulder_width, chest, waist, arm_length, bicep_circ,
@@ -68,7 +68,7 @@ router.post('/', authenticateToken, (req, res) => {
 });
 
 // PATCH /api/measurements/:id - Modification
-router.patch('/:id', authenticateToken, (req, res) => {
+router.patch('/:id', authenticateJWT, (req, res) => {
   const { id } = req.params;
   const fields = req.body;
 
@@ -107,7 +107,7 @@ router.patch('/:id', authenticateToken, (req, res) => {
 });
 
 // DELETE /api/measurements/:id - Suppression
-router.delete('/:id', authenticateToken, (req, res) => {
+router.delete('/:id', authenticateJWT, (req, res) => {
   try {
     const result = db.prepare('DELETE FROM client_measurements WHERE id = ?').run(req.params.id);
     if (result.changes === 0) return res.status(404).json({ error: 'Client introuvable' });
