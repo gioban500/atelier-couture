@@ -7,8 +7,7 @@ const router = express.Router();
 // GET /api/measurements - Liste globale
 router.get('/', authenticateJWT, async (req, res) => {
   const query = `
-    SELECT cm.id, cm.client_name, cm.devis_id, cm.height, cm.chest, cm.waist, cm.hips, 
-           cm.arm_length, cm.outside_leg, cm.photo_url, d.service_type
+    SELECT cm.*, d.service_type
     FROM client_measurements cm
     LEFT JOIN devis d ON cm.devis_id = d.id
     ORDER BY cm.updated_at DESC
