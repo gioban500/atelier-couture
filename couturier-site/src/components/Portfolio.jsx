@@ -141,35 +141,50 @@ export default function Portfolio() {
       {/* LIGHTBOX MODAL */}
       {selectedImage && (
         <div 
-          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 sm:p-6"
           onClick={() => setSelectedImage(null)}
         >
-          <div className="relative max-w-4xl w-full" onClick={e => e.stopPropagation()}>
-            <img 
-              src={selectedImage.image_url} 
-              alt={selectedImage.title} 
-              className="w-full h-auto rounded-lg"
-            />
-            <div className="bg-black/80 text-white p-4 rounded-b-lg">
-              <h3 className="text-2xl font-serif font-bold mb-2">{selectedImage.title}</h3>
-              <p className="text-gray-300">
-                {getCategoryName(selectedImage.category_id)}
-              </p>
-            </div>
+          <div 
+            className="relative max-w-4xl w-full flex flex-col items-center justify-center max-h-[90vh]" 
+            onClick={e => e.stopPropagation()}
+          >
+            {/* BOUTON FERMER */}
             <button 
               onClick={() => setSelectedImage(null)}
-              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition"
+              className="absolute -top-10 right-0 text-white hover:text-gray-300 transition z-10"
+              title="Fermer"
             >
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+
+            {/* CONTENEUR IMAGE (Ajustement hauteur + object-contain) */}
+            <div className="w-full flex justify-center items-center overflow-hidden bg-black/40 rounded-t-lg p-2">
+              <img 
+                src={selectedImage.image_url} 
+                alt={selectedImage.title} 
+                className="max-h-[70vh] w-auto max-w-full object-contain rounded-md shadow-2xl"
+              />
+            </div>
+
+            {/* INFOS CRÉATION */}
+            <div className="w-full bg-black/90 text-white p-4 rounded-b-lg border-t border-white/10 text-center sm:text-left">
+              <h3 className="text-xl sm:text-2xl font-serif font-bold mb-1">{selectedImage.title}</h3>
+              <p className="text-gray-400 text-sm">
+                {getCategoryName(selectedImage.category_id)}
+              </p>
+            </div>
+
+            {/* FLÈCHES DE NAVIGATION */}
             <button 
               onClick={() => {
                 const currentIndex = portfolioData.findIndex(i => i.id === selectedImage.id);
                 if (currentIndex > 0) setSelectedImage(portfolioData[currentIndex - 1]);
               }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-2 rounded transition"
+              disabled={portfolioData.findIndex(i => i.id === selectedImage.id) === 0}
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 disabled:opacity-20 disabled:cursor-not-allowed text-white p-3 rounded-full transition z-10"
+              title="Précédent"
             >
               ❮
             </button>
@@ -178,7 +193,9 @@ export default function Portfolio() {
                 const currentIndex = portfolioData.findIndex(i => i.id === selectedImage.id);
                 if (currentIndex < portfolioData.length - 1) setSelectedImage(portfolioData[currentIndex + 1]);
               }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-2 rounded transition"
+              disabled={portfolioData.findIndex(i => i.id === selectedImage.id) === portfolioData.length - 1}
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 disabled:opacity-20 disabled:cursor-not-allowed text-white p-3 rounded-full transition z-10"
+              title="Suivant"
             >
               ❯
             </button>
