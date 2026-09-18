@@ -13,7 +13,6 @@ router.get('/devis', async (req, res) => {
     const { status } = req.query;
     const db = await initDB();
 
-    // On ajoute l'alias reference_img_url AS image_url pour le frontend
     let query = 'SELECT *, reference_img_url AS image_url FROM devis';
     const params = [];
 
@@ -27,6 +26,7 @@ router.get('/devis', async (req, res) => {
     const list = await db.all(query, params);
     res.json(list);
   } catch (err) {
+    console.error('❌ Erreur récupération devis admin:', err);
     res.status(500).json({ error: 'Erreur lors de la récupération des devis.' });
   }
 });
@@ -51,22 +51,26 @@ router.put('/devis/:id/status', async (req, res) => {
 
     const oldStatus = currentDevis.status;
 
+    // Sécurisation de l'ID utilisateur pour éviter les violations de clés étrangères
+    const userId = req.user && req.user.id ? parseInt(req.user.id, 10) : null;
+
     // Mise à jour du statut principal
     await db.run(
       `UPDATE devis SET status = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? WHERE id = ?`,
-      [status, req.user.id, id]
+      [status, userId, id]
     );
 
-    // Historisation (Section 6.1)
+    // Enregistrement dans l'historique
     await db.run(
       `INSERT INTO devis_history (devis_id, old_status, new_status, changed_by)
        VALUES (?, ?, ?, ?)`,
-      [id, oldStatus, status, req.user.id]
+      [id, oldStatus, status, userId]
     );
 
     res.json({ message: `Statut mis à jour : ${oldStatus} -> ${status}` });
   } catch (err) {
-    res.status(500).json({ error: 'Erreur lors de la mise à jour du statut.' });
+    console.error('❌ Erreur SQL changement status:', err);
+    res.status(500).json({ error: 'Erreur lors de la mise à jour du statut: ' + err.message });
   }
 });
 
@@ -79,6 +83,7 @@ router.delete('/portfolio/:id', async (req, res) => {
     await db.run('DELETE FROM portfolio WHERE id = ?', [id]);
     res.json({ message: 'Création supprimée du portfolio.' });
   } catch (err) {
+    console.error('❌ Erreur suppression portfolio:', err);
     res.status(500).json({ error: 'Erreur lors de la suppression.' });
   }
 });
