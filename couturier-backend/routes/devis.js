@@ -1,7 +1,6 @@
 import express from 'express';
 import { initDB } from '../db.js';
 import rateLimit from 'express-rate-limit';
-import { sendNewDevisNotificationToCouturier, sendClientConfirmationEmail } from '../utils/email.js';
 
 const router = express.Router();
 
@@ -17,7 +16,7 @@ const devisLimiter = rateLimit({
 });
 
 /**
- * POST /devis - Soumission avec validation et envoi de mail
+ * POST /devis - Soumission avec validation (sans envoi de mail)
  */
 router.post('/', devisLimiter, async (req, res) => {
   try {
@@ -74,24 +73,6 @@ router.post('/', devisLimiter, async (req, res) => {
     );
 
     const devisId = result.lastID;
-
-    // Notifications email SMTP (asynchrones)
-    const newDevisData = {
-      id: devisId,
-      client_name,
-      client_phone,
-      client_email,
-      service_type: normalizedType,
-      description,
-      reference_img_url: reference_img_url || null
-    };
-
-    sendNewDevisNotificationToCouturier(newDevisData).catch(err => 
-      console.error('❌ Erreur notif mail couturier:', err)
-    );
-    sendClientConfirmationEmail(client_email, client_name).catch(err => 
-      console.error('❌ Erreur notif mail client:', err)
-    );
 
     res.status(201).json({
       success: true,
