@@ -10,6 +10,47 @@ const router = express.Router();
 const loginAttempts = new Map();
 
 /**
+ * POST /register-admin - Création d'un administrateur avec clé secrète
+ */
+router.post('/register-admin', async (req, res) => {
+  const { email, password, secretKey } = req.body;
+
+  if (!email || !password || !secretKey) {
+    return res.status(400).json({ error: 'Tous les champs (email, mot de passe, clé secrète) sont requis.' });
+  }
+
+  const expectedSecret = process.env.ADMIN_SECRET_KEY;
+  if (!expectedSecret || secretKey !== expectedSecret) {
+    return res.status(403).json({ error: 'Clé secrète d\'administration invalide.' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères.' });
+  }
+
+  try {
+    const db = await initDB();
+
+    const existingUser = await db.get('SELECT id FROM users WHERE email = ?', [email]);
+    if (existingUser) {
+      return res.status(400).json({ error: 'Un compte avec cet email existe déjà.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    await db.run(
+      'INSERT INTO users (email, password_hash, role) VALUES (?, ?, ?)',
+      [email, hashedPassword, 'admin']
+    );
+
+    res.status(201).json({ message: 'Administrateur créé avec succès !' });
+  } catch (err) {
+    console.error('Erreur register-admin:', err);
+    res.status(500).json({ error: 'Erreur serveur lors de la création de l\'administrateur.' });
+  }
+});
+
+/**
  * POST /login - Connexion Administrateur
  */
 router.post('/login', async (req, res) => {
@@ -22,13 +63,11 @@ router.post('/login', async (req, res) => {
   const now = Date.now();
   let userAttempts = loginAttempts.get(email);
 
-  // Si le temps de blocage est expiré, on réinitialise complètement le compteur
   if (userAttempts && userAttempts.lockUntil > 0 && userAttempts.lockUntil <= now) {
     loginAttempts.delete(email);
     userAttempts = undefined;
   }
 
-  // Vérification si l'utilisateur est actuellement bloqué
   if (userAttempts && userAttempts.lockUntil > now) {
     const remainingMinutes = Math.ceil((userAttempts.lockUntil - now) / 60000);
     return res.status(429).json({ 
@@ -49,7 +88,6 @@ router.post('/login', async (req, res) => {
       return handleFailedAttempt(email, res);
     }
 
-    // Connexion réussie : on nettoie les tentatives
     loginAttempts.delete(email);
     await db.run('UPDATE users SET last_login_at = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
 
@@ -77,7 +115,7 @@ function handleFailedAttempt(email, res) {
   userAttempts.count += 1;
   
   if (userAttempts.count >= 5) {
-    userAttempts.lockUntil = now + 5 * 60 * 1000; // Bloqué pour 5 minutes
+    userAttempts.lockUntil = now + 5 * 60 * 1000;
     loginAttempts.set(email, userAttempts);
     return res.status(429).json({ 
       error: 'Compte temporairement bloqué pendant 5 minutes.' 

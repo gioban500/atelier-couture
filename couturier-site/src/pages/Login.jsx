@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://atelier-couture-3954.onrender.com';
+
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -12,9 +14,17 @@ export default function Login() {
 
   // État pour la modale "Mot de passe oublié"
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [forgotEmail, setForgotEmail] = useState('mangavolmet@gmail.com');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotMessage, setForgotMessage] = useState(null);
+
+  // État pour la modale "Créer un compte Admin"
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [secretKey, setSecretKey] = useState('');
+  const [regLoading, setRegLoading] = useState(false);
+  const [regMessage, setRegMessage] = useState(null);
 
   const navigate = useNavigate();
 
@@ -26,7 +36,7 @@ export default function Login() {
     setSuccess(null);
 
     try {
-      const response = await fetch('https://atelier-couture-3954.onrender.com/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -57,7 +67,7 @@ export default function Login() {
     setForgotMessage(null);
 
     try {
-      const response = await fetch('https://atelier-couture-3954.onrender.com/api/auth/forgot-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: forgotEmail }),
@@ -80,6 +90,42 @@ export default function Login() {
       });
     } finally {
       setForgotLoading(false);
+    }
+  };
+
+  // Création d'un nouvel administrateur
+  const handleRegisterAdmin = async (e) => {
+    e.preventDefault();
+    setRegLoading(true);
+    setRegMessage(null);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register-admin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: regEmail, password: regPassword, secretKey }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de la création du compte');
+      }
+
+      setRegMessage({
+        type: 'success',
+        text: '✅ Administrateur créé avec succès ! Vous pouvez vous connecter.',
+      });
+      setRegEmail('');
+      setRegPassword('');
+      setSecretKey('');
+    } catch (err) {
+      setRegMessage({
+        type: 'error',
+        text: err.message,
+      });
+    } finally {
+      setRegLoading(false);
     }
   };
 
@@ -152,9 +198,15 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-xs text-slate-400 text-center mt-4">
-            Identifiants de test: admin@couture.tg / AdminPassword123!
-          </p>
+          <div className="mt-6 pt-4 border-t border-slate-700/60 text-center">
+            <button
+              type="button"
+              onClick={() => setShowRegisterModal(true)}
+              className="text-xs text-[#D4AF37] hover:underline"
+            >
+              + Créer un nouveau compte administrateur
+            </button>
+          </div>
         </div>
       </div>
 
@@ -191,6 +243,7 @@ export default function Login() {
                   required
                   value={forgotEmail}
                   onChange={(e) => setForgotEmail(e.target.value)}
+                  placeholder="votre-email@domaine.com"
                   className="w-full px-3 py-2 rounded border border-slate-700 bg-slate-900 text-white text-sm focus:border-[#D4AF37] outline-none"
                 />
               </div>
@@ -212,6 +265,96 @@ export default function Login() {
                   className="w-1/2 bg-[#D4AF37] text-[#0F172A] py-2 rounded font-semibold text-sm hover:bg-[#b8952b] transition disabled:opacity-50"
                 >
                   {forgotLoading ? 'Envoi...' : 'Envoyer le lien'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODALE CRÉATION ADMIN */}
+      {showRegisterModal && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-[#0F172A] border border-slate-700 rounded-lg p-6 max-w-sm w-full shadow-2xl relative">
+            <h3 className="text-xl font-serif font-bold text-white mb-2">
+              Créer un compte Admin
+            </h3>
+            <p className="text-xs text-slate-400 mb-4">
+              Renseignez la clé secrète configurée dans votre serveur pour valider la création.
+            </p>
+
+            {regMessage && (
+              <div
+                className={`p-3 rounded mb-4 text-xs ${
+                  regMessage.type === 'success'
+                    ? 'bg-emerald-900/30 border border-emerald-500/50 text-emerald-300'
+                    : 'bg-red-900/30 border border-red-500/50 text-red-400'
+                }`}
+              >
+                {regMessage.text}
+              </div>
+            )}
+
+            <form onSubmit={handleRegisterAdmin} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#D4AF37] mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="nouvel.admin@couture.tg"
+                  className="w-full px-3 py-2 rounded border border-slate-700 bg-slate-900 text-white text-sm focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#D4AF37] mb-1">
+                  Mot de passe
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-3 py-2 rounded border border-slate-700 bg-slate-900 text-white text-sm focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-[#D4AF37] mb-1">
+                  Clé Secrète Admin
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={secretKey}
+                  onChange={(e) => setSecretKey(e.target.value)}
+                  placeholder="Clé ADMIN_SECRET_KEY"
+                  className="w-full px-3 py-2 rounded border border-slate-700 bg-slate-900 text-white text-sm focus:border-[#D4AF37] outline-none"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRegisterModal(false);
+                    setRegMessage(null);
+                  }}
+                  className="w-1/2 bg-slate-800 text-slate-300 py-2 rounded text-sm hover:bg-slate-700 transition"
+                >
+                  Fermer
+                </button>
+                <button
+                  type="submit"
+                  disabled={regLoading}
+                  className="w-1/2 bg-[#D4AF37] text-[#0F172A] py-2 rounded font-semibold text-sm hover:bg-[#b8952b] transition disabled:opacity-50"
+                >
+                  {regLoading ? 'Création...' : 'Créer'}
                 </button>
               </div>
             </form>
