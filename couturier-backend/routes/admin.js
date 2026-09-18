@@ -51,20 +51,26 @@ router.put('/devis/:id/status', async (req, res) => {
 
     const oldStatus = currentDevis.status;
 
-    // Sécurisation de l'ID utilisateur pour éviter les violations de clés étrangères
-    const userId = req.user && req.user.id ? parseInt(req.user.id, 10) : null;
+    // Vérifie si l'ID utilisateur de la session existe réellement en BDD pour éviter la casse de la clé étrangère
+    let validUserId = null;
+    if (req.user && req.user.id) {
+      const userExists = await db.get('SELECT id FROM users WHERE id = ?', [req.user.id]);
+      if (userExists) {
+        validUserId = userExists.id;
+      }
+    }
 
-    // Mise à jour du statut principal
+    // 1. Mise à jour du devis principal
     await db.run(
       `UPDATE devis SET status = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ? WHERE id = ?`,
-      [status, userId, id]
+      [status, validUserId, id]
     );
 
-    // Enregistrement dans l'historique
+    // 2. Enregistrement dans l'historique
     await db.run(
       `INSERT INTO devis_history (devis_id, old_status, new_status, changed_by)
        VALUES (?, ?, ?, ?)`,
-      [id, oldStatus, status, userId]
+      [id, oldStatus, status, validUserId]
     );
 
     res.json({ message: `Statut mis à jour : ${oldStatus} -> ${status}` });
